@@ -45,7 +45,8 @@ def fetch_market_data():
             print(f"[{key}] Erro ao buscar cotação: {e}", file=sys.stderr)
 
     if len(cache) == len(SYMBOLS):
-        out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'market_cache.json')
+        repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        out_path = os.path.join(repo_root, 'market_cache.json')
         with open(out_path, 'w', encoding='utf-8') as f:
             json.dump(cache, f, separators=(',', ':'))
         print("market_cache.json gravado com sucesso.")
