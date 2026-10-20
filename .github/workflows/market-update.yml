@@ -1,0 +1,32 @@
+name: Atualização Automática dos Mercados (IBOV, SPX, BRENT, GOLD)
+
+on:
+  schedule:
+    # Roda a cada 1 hora, de segunda a sexta-feira (dias úteis: 1-5)
+    - cron: '0 * * * 1-5'
+  workflow_dispatch: # Permite disparar manualmente pelo botão no GitHub se desejar
+
+permissions:
+  contents: write
+
+jobs:
+  update-market:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Executar script de cotações
+        run: python scripts/update_market.py
+
+      - name: Commitar e enviar dados atualizados
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add market_cache.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: atualiza cotacoes de mercado (IBOV, SPX, BRENT, GOLD)" && git push)
