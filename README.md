@@ -3,6 +3,8 @@
 
 Site oficial do **Grupo de Análise Macroeconômica Aplicada** da PUC-Rio.
 
+Guilherme Pinheiro e Daniel Adler - GAMA 26.2
+
 🔗 [gmagno778.github.io/gama-pucrio](https://gmagno778.github.io/gama-pucrio)
 
 ---
