@@ -15,19 +15,25 @@ def fetch_market_data():
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
 
     for key, sym in SYMBOLS.items():
-        url = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1y'
-        req = urllib.request.Request(url, headers=headers)
+        url_5y = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5y'
+        url_5d = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d'
+        
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode('utf-8'))
-                res = data['chart']['result'][0]
-                meta = res['meta']
-                price = meta['regularMarketPrice']
-                prev = meta.get('chartPreviousClose') or meta.get('previousClose')
-                chg = ((price - prev) / prev) * 100 if prev else 0.0
+            req_5y = urllib.request.Request(url_5y, headers=headers)
+            req_5d = urllib.request.Request(url_5d, headers=headers)
+            
+            with urllib.request.urlopen(req_5d, timeout=15) as r_5d:
+                data_5d = json.loads(r_5d.read().decode('utf-8'))
+                meta_5d = data_5d['chart']['result'][0]['meta']
+                price = meta_5d['regularMarketPrice']
+                prev = meta_5d.get('chartPreviousClose') or meta_5d.get('previousClose')
+                day_chg = ((price - prev) / prev) * 100 if prev else 0.0
 
-                timestamps = res.get('timestamp', [])
-                quotes = res['indicators']['quote'][0]
+            with urllib.request.urlopen(req_5y, timeout=20) as r_5y:
+                data_5y = json.loads(r_5y.read().decode('utf-8'))
+                res_5y = data_5y['chart']['result'][0]
+                timestamps = res_5y.get('timestamp', [])
+                quotes = res_5y['indicators']['quote'][0]
                 closes = quotes.get('close', [])
 
                 points = []
@@ -35,12 +41,13 @@ def fetch_market_data():
                     if c is not None:
                         points.append({'t': t, 'c': round(c, 2)})
 
-                cache[key] = {
-                    'price': round(price, 2),
-                    'pctChange': round(chg, 2),
-                    'points': points
-                }
-                print(f"[{key}] Atualizado com sucesso: {price:.2f} ({chg:+.2f}%)")
+            cache[key] = {
+                'price': round(price, 2),
+                'pctChange': round(day_chg, 2),
+                'previousClose': round(prev, 2) if prev else None,
+                'points': points
+            }
+            print(f"[{key}] Atualizado com sucesso: {price:.2f} ({day_chg:+.2f}% no dia, {len(points)} pontos históricos)")
         except Exception as e:
             print(f"[{key}] Erro ao buscar cotação: {e}", file=sys.stderr)
 

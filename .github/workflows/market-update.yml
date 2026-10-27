@@ -2,8 +2,9 @@ name: Atualização Automática dos Mercados (IBOV, SPX, BRENT, GOLD)
 
 on:
   schedule:
-    # Roda a cada 1 hora, de segunda a sexta-feira (dias úteis: 1-5)
-    - cron: '0 * * * 1-5'
+    # Roda 1 vez por dia nos dias úteis (segunda a sexta-feira) às 21:30 UTC (18:30 no horário de Brasília)
+    # Momento em que o pregão da B3 e de Wall Street já fecharam
+    - cron: '30 21 * * 1-5'
   workflow_dispatch: # Permite disparar manualmente pelo botão no GitHub se desejar
 
 permissions:
@@ -29,4 +30,4 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add market_cache.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: atualiza cotacoes de mercado (IBOV, SPX, BRENT, GOLD)" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: atualiza cotacoes de mercado (fechamento diario)" && git push origin main)

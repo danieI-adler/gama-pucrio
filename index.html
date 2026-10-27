@@ -1706,9 +1706,9 @@
                 <span data-i18n="asset-BRENT-label">Petróleo Brent</span>
                 <span class="metric-live-dot" title="Mercado Global"></span>
               </span>
-              <span class="metric-value" id="val-BRENT">US$ 97,76</span>
+              <span class="metric-value" id="val-BRENT">US$ 109,41</span>
               <span class="metric-subval" id="sub-BRENT" data-i18n="asset-BRENT-sub">Barril (ICE/NYMEX)</span>
-              <span class="metric-change positive" id="chg-BRENT">▲ +48,08% (1A)</span>
+              <span class="metric-change negative" id="chg-BRENT">▼ -3,32%</span>
             </div>
 
             
@@ -1717,9 +1717,9 @@
                 <span data-i18n="asset-GOLD-label">Ouro (XAU/USD)</span>
                 <span class="metric-live-dot" title="Mercado Global"></span>
               </span>
-              <span class="metric-value" id="val-GOLD">US$ 4.437</span>
+              <span class="metric-value" id="val-GOLD">US$ 4.062,50</span>
               <span class="metric-subval" id="sub-GOLD" data-i18n="asset-GOLD-sub">Onça-troy</span>
-              <span class="metric-change positive" id="chg-GOLD">▲ +21,96% (1A)</span>
+              <span class="metric-change positive" id="chg-GOLD">▲ +0,05%</span>
             </div>
 
             
@@ -1728,9 +1728,9 @@
                 <span data-i18n="asset-SPX-label">S&P 500 (SPX)</span>
                 <span class="metric-live-dot" title="Nova York"></span>
               </span>
-              <span class="metric-value" id="val-SPX">7.690,92</span>
+              <span class="metric-value" id="val-SPX">7.697,25</span>
               <span class="metric-subval" id="sub-SPX" data-i18n="asset-SPX-sub">Índice EUA</span>
-              <span class="metric-change positive" id="chg-SPX">▲ +18,41% (1A)</span>
+              <span class="metric-change negative" id="chg-SPX">▼ -0,20%</span>
             </div>
 
             
@@ -1739,9 +1739,9 @@
                 <span data-i18n="asset-IBOV-label">Ibovespa</span>
                 <span class="metric-live-dot" title="B3 Brasil"></span>
               </span>
-              <span class="metric-value" id="val-IBOV">189.159</span>
+              <span class="metric-value" id="val-IBOV">176.087</span>
               <span class="metric-subval" id="sub-IBOV" data-i18n="asset-IBOV-sub">B3 São Paulo</span>
-              <span class="metric-change positive" id="chg-IBOV">▲ +33,41% (1A)</span>
+              <span class="metric-change negative" id="chg-IBOV">▼ -15,46%</span>
             </div>
           </div>
 
@@ -2595,8 +2595,8 @@ async function handleDirectFormSubmit(e) {
 
       try {
         const [selicResp, ipcaResp, ipcaMensalResp] = await Promise.all([
-          fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados?formato=json&dataInicial=01/01/2023&dataFinal=31/12/2026'),
-          fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados?formato=json&dataInicial=01/01/2023&dataFinal=31/12/2026'),
+          fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados?formato=json&dataInicial=01/01/2020&dataFinal=31/12/2026'),
+          fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados?formato=json&dataInicial=01/01/2020&dataFinal=31/12/2026'),
           fetch('https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json&dataInicial=01/01/2026&dataFinal=31/12/2026')
         ]);
 
@@ -2787,7 +2787,7 @@ async function handleDirectFormSubmit(e) {
       if (activeRange === '1M') days = 30;
       else if (activeRange === '6M') days = 180;
       else if (activeRange === '1A') days = 365;
-      else if (activeRange === 'MAX') days = 365 * 5;
+      else if (activeRange === 'MAX') days = 365 * 7;
 
       const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
       let filtered = rawSeries.filter(p => p.rawDate >= cutoff);
