@@ -1772,9 +1772,10 @@
                   <span id="refreshIcon">↻</span> <span id="refreshLabel" data-i18n="chart-refresh-btn">Atualizar</span>
                 </button>
                 <div class="range-btn-group">
+                  <button class="range-btn active" id="range-1D" onclick="setChartRange('1D')" data-i18n="range-day">1D</button>
                   <button class="range-btn" id="range-1M" onclick="setChartRange('1M')">1M</button>
                   <button class="range-btn" id="range-6M" onclick="setChartRange('6M')">6M</button>
-                  <button class="range-btn active" id="range-1A" onclick="setChartRange('1A')">1A</button>
+                  <button class="range-btn" id="range-1A" onclick="setChartRange('1A')">1A</button>
                   <button class="range-btn" id="range-MAX" onclick="setChartRange('MAX')" data-i18n="range-all">Tudo</button>
                 </div>
               </div>
@@ -2119,6 +2120,7 @@
         "asset-SPX-sub": "Índice EUA",
         "asset-IBOV-label": "Ibovespa",
         "asset-IBOV-sub": "B3 São Paulo",
+        "range-day": "1D",
         "range-all": "Tudo",
         "chart-refresh-btn": "Atualizar",
         "chart-refresh-done": "Atualizado!",
@@ -2248,6 +2250,7 @@
         "asset-SPX-sub": "US Index",
         "asset-IBOV-label": "Ibovespa",
         "asset-IBOV-sub": "B3 São Paulo",
+        "range-day": "1D",
         "range-all": "All",
         "chart-refresh-btn": "Refresh",
         "chart-refresh-done": "Updated!",
@@ -2513,7 +2516,7 @@ async function handleDirectFormSubmit(e) {
     };
 
     let activeMarketAsset = 'USDBRL';
-    let activeRange = '1A';
+    let activeRange = '1D';
     let marketDataCache = {};
     let globalMarketCache = null;
 
@@ -2548,9 +2551,16 @@ async function handleDirectFormSubmit(e) {
             if (globalMarketCache[k]) {
               const item = globalMarketCache[k];
               const pts = item.points || [];
+              const intra = item.intraday || [];
               marketDataCache[k] = {
                 currentPrice: item.price,
                 pctChange: item.pctChange || 0,
+                previousClose: item.previousClose,
+                intraday: intra.map(p => ({
+                  date: new Date(p.t * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                  rawDate: new Date(p.t * 1000),
+                  value: p.c
+                })),
                 series: pts.map(p => ({
                   date: new Date(p.t * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }),
                   rawDate: new Date(p.t * 1000),
@@ -2797,30 +2807,52 @@ async function handleDirectFormSubmit(e) {
     function renderActiveChart() {
       const meta = MARKET_ASSETS[activeMarketAsset];
       const dataObj = marketDataCache[activeMarketAsset];
-      if (!meta || !dataObj || !dataObj.series) return;
+      if (!meta || !dataObj) return;
 
-      const rawSeries = dataObj.series;
-      if (rawSeries.length === 0) return;
+      const is1D = activeRange === '1D';
+      let labels = [];
+      let values = [];
+      let periodDiff = 0;
+      let periodPct = 0;
+      let lastVal = dataObj.currentPrice;
 
-      const now = new Date();
-      let days = 365;
-      if (activeRange === '1M') days = 30;
-      else if (activeRange === '6M') days = 180;
-      else if (activeRange === '1A') days = 365;
-      else if (activeRange === 'MAX') days = 365 * 7;
+      if (is1D) {
+        if (dataObj.intraday && dataObj.intraday.length > 0) {
+          labels = dataObj.intraday.map(p => p.date);
+          values = dataObj.intraday.map(p => p.value);
+        } else if (dataObj.series && dataObj.series.length > 0) {
+          const slicePts = dataObj.series.slice(-7);
+          labels = slicePts.map(p => p.date);
+          values = slicePts.map(p => p.value);
+        }
+        lastVal = values.length > 0 ? values[values.length - 1] : dataObj.currentPrice;
+        periodPct = dataObj.pctChange || 0;
+        const prev = dataObj.previousClose || (lastVal / (1 + (periodPct / 100)));
+        periodDiff = lastVal - prev;
+      } else {
+        const rawSeries = dataObj.series || [];
+        if (rawSeries.length === 0) return;
 
-      const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
-      let filtered = rawSeries.filter(p => p.rawDate >= cutoff);
-      if (filtered.length < 5) filtered = rawSeries.slice(-Math.min(rawSeries.length, 30));
+        const now = new Date();
+        let days = 365;
+        if (activeRange === '1M') days = 30;
+        else if (activeRange === '6M') days = 180;
+        else if (activeRange === '1A') days = 365;
+        else if (activeRange === 'MAX') days = 365 * 7;
 
-      const labels = filtered.map(p => p.date);
-      const values = filtered.map(p => p.value);
+        const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+        let filtered = rawSeries.filter(p => p.rawDate >= cutoff);
+        if (filtered.length < 5) filtered = rawSeries.slice(-Math.min(rawSeries.length, 30));
 
-      const firstVal = values[0];
-      const lastVal = values[values.length - 1];
-      const periodDiff = lastVal - firstVal;
-      const periodPct = firstVal !== 0 ? (periodDiff / firstVal) * 100 : 0;
-      const isPositive = periodDiff >= 0;
+        labels = filtered.map(p => p.date);
+        values = filtered.map(p => p.value);
+        const firstVal = values[0];
+        lastVal = values[values.length - 1];
+        periodDiff = lastVal - firstVal;
+        periodPct = firstVal !== 0 ? (periodDiff / firstVal) * 100 : 0;
+      }
+
+      const isPositive = periodPct >= 0;
 
       const titleEl = document.getElementById('chartActiveTitle');
       const bigPriceEl = document.getElementById('chartBigPrice');
@@ -2837,8 +2869,8 @@ async function handleDirectFormSubmit(e) {
         bigChgEl.className = 'metric-change ' + (isPositive ? 'positive' : 'negative');
       }
       if (timeScopeEl) {
-        const rangeLabelsPt = { '1M': 'Último mês', '6M': 'Últimos 6 meses', '1A': 'Último ano', 'MAX': 'Série completa' };
-        const rangeLabelsEn = { '1M': 'Past month', '6M': 'Past 6 months', '1A': 'Past year', 'MAX': 'Full series' };
+        const rangeLabelsPt = { '1D': 'Hoje', '1M': 'Último mês', '6M': 'Últimos 6 meses', '1A': 'Último ano', 'MAX': 'Série completa' };
+        const rangeLabelsEn = { '1D': 'Today', '1M': 'Past month', '6M': 'Past 6 months', '1A': 'Past year', 'MAX': 'Full series' };
         const map = isEn ? rangeLabelsEn : rangeLabelsPt;
         timeScopeEl.innerText = `(${map[activeRange] || activeRange})`;
       }
