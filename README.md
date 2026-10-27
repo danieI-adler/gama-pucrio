@@ -77,4 +77,4 @@ O site é estático e está hospedado via **GitHub Pages** (branch `main`, raiz 
 
 ## Contato técnico
 
-Dúvidas sobre o código: falar com o presidente da gestão que criou o site ou abrir uma *issue* no repositório.
+Dúvidas sobre o código: falar com o presidente da gestão (e-mail gmagno778@gmail.com) que criou o site ou abrir uma *issue* no repositório.
