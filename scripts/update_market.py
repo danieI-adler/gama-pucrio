@@ -16,17 +16,17 @@ def fetch_market_data():
 
     for key, sym in SYMBOLS.items():
         url_5y = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5y'
-        url_5d = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=5d'
+        url_1d = f'https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1d'
         
         try:
             req_5y = urllib.request.Request(url_5y, headers=headers)
-            req_5d = urllib.request.Request(url_5d, headers=headers)
+            req_1d = urllib.request.Request(url_1d, headers=headers)
             
-            with urllib.request.urlopen(req_5d, timeout=15) as r_5d:
-                data_5d = json.loads(r_5d.read().decode('utf-8'))
-                meta_5d = data_5d['chart']['result'][0]['meta']
-                price = meta_5d['regularMarketPrice']
-                prev = meta_5d.get('chartPreviousClose') or meta_5d.get('previousClose')
+            with urllib.request.urlopen(req_1d, timeout=15) as r_1d:
+                data_1d = json.loads(r_1d.read().decode('utf-8'))
+                meta_1d = data_1d['chart']['result'][0]['meta']
+                price = meta_1d['regularMarketPrice']
+                prev = meta_1d.get('chartPreviousClose') or meta_1d.get('previousClose')
                 day_chg = ((price - prev) / prev) * 100 if prev else 0.0
 
             with urllib.request.urlopen(req_5y, timeout=20) as r_5y:
